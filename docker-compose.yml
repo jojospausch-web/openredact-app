@@ -6,8 +6,13 @@ services:
     image: openredact/backend:${TAG:-latest}
     expose:
       - 8000
+    volumes:
+      - openredact-storage:/app/storage
   frontend:
     build: ./frontend
     image: openredact/frontend:${TAG:-latest}
     ports:
       - "80:80"
+
+volumes:
+  openredact-storage:

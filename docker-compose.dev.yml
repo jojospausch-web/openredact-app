@@ -8,6 +8,7 @@ services:
       - "8000:8000"
     volumes:
       - "./backend:/app"
+      - openredact-storage:/app/storage
   frontend-dev:
     build:
       context: ./frontend
@@ -18,3 +19,6 @@ services:
       - "80:80"
     volumes:
       - "./frontend:/app"
+
+volumes:
+  openredact-storage:

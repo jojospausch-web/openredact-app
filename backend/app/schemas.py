@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
 
 
@@ -78,3 +78,60 @@ class AnonymizedPiisResponse(CamelBaseModel):
 
 class ErrorMessage(BaseModel):
     detail: str
+
+
+# Whitelist schemas
+class WhitelistResponse(CamelBaseModel):
+    """Response containing all whitelist entries"""
+
+    entries: List[str]
+
+
+class WhitelistEntry(CamelBaseModel):
+    """Single whitelist entry"""
+
+    entry: str
+
+
+class WhitelistBulkUpdate(CamelBaseModel):
+    """Bulk update whitelist entries"""
+
+    entries: List[str]
+
+
+# Template schemas
+class TemplateData(CamelBaseModel):
+    """Template data structure"""
+
+    name: str
+    description: Optional[str] = ""
+    default_mechanism: Dict[str, Any]
+    mechanisms_by_tag: Dict[str, Dict[str, Any]]
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+class TemplateResponse(CamelBaseModel):
+    """Single template response"""
+
+    template_id: str
+    template: TemplateData
+
+
+class TemplatesResponse(CamelBaseModel):
+    """Response containing all templates"""
+
+    templates: Dict[str, TemplateData]
+
+
+class TemplateImport(CamelBaseModel):
+    """Import templates payload"""
+
+    templates: Dict[str, TemplateData]
+
+
+class SuccessResponse(CamelBaseModel):
+    """Generic success response"""
+
+    success: bool
+    message: Optional[str] = None
