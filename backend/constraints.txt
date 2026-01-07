@@ -1,5 +1,0 @@
-# Constraint overrides for compatibility
-# 
-# torch: nerwhal requires torch<1.6.0, but PyPI removed these versions
-# PyTorch 1.8+ is backward-compatible and works with Stanza/nerwhal
-torch>=1.8.0,<3.0

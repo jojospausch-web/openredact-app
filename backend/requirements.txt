@@ -1,3 +1,7 @@
+# NOTE: These dependencies are installed manually in Dockerfile
+# due to torch version conflict from nerwhal (requires torch<1.6.0, unavailable on PyPI)
+# See Dockerfile for the three-stage installation process
+
 fastapi==0.65.2
 uvicorn==0.11.7
 python-multipart==0.0.5
