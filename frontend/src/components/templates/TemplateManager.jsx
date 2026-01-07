@@ -173,6 +173,17 @@ const TemplateManager = ({ isOpen, onClose, currentConfig, onApplyTemplate }) =>
     const file = event.target.files[0];
     if (!file) return;
 
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      AppToaster.show({
+        message: t("templates.import_too_large") || "File is too large (max 5MB)",
+        intent: "danger",
+      });
+      event.target.value = null;
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
       try {

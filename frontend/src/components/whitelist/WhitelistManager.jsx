@@ -100,6 +100,7 @@ const WhitelistManager = ({ isOpen, onClose }) => {
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
+      e.preventDefault();
       handleAddEntry();
     }
   };

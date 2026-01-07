@@ -143,17 +143,14 @@ async def find_piis(recognizers: str = Form(...), file: UploadFile = File(...)):
     nerwhal_config = nerwhal.Config(language="de", recognizer_paths=recognizer_paths, use_statistical_ner=use_statistical_ner)
     res = nerwhal.recognize(wrapper.text, config=nerwhal_config, combination_strategy="smart-fusion")
 
-    # Filter out whitelisted entities
+    # Filter out whitelisted entities (case-insensitive)
     whitelist = WhitelistStorage.get_all()
-    whitelist_lower = [entry.lower() for entry in whitelist]
-
-    filtered_piis = []
-    for pii in res["ents"]:
-        pii_text_lower = pii.text.lower().strip()
-        if pii_text_lower not in whitelist_lower:
-            filtered_piis.append(pii)
-        else:
-            logger.info(f"Filtered whitelisted PII: {pii.text}")
+    if whitelist:
+        whitelist_lower = set(entry.lower() for entry in whitelist)
+        filtered_piis = [pii for pii in res["ents"] if pii.text.lower().strip() not in whitelist_lower]
+        logger.info(f"Filtered {len(res['ents']) - len(filtered_piis)} whitelisted PII(s)")
+    else:
+        filtered_piis = res["ents"]
 
     return FindPiisResponse(
         piis=[asdict(pii) for pii in filtered_piis],
