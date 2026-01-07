@@ -18,7 +18,7 @@ ENV PIP_NO_CACHE_DIR=1
 COPY requirements-dev.txt .
 RUN pip install --no-cache-dir -r requirements-dev.txt
 
-# Three-stage installation to work around nerwhal's outdated torch requirement
+# Four-stage installation to work around nerwhal's outdated torch requirement
 
 # STAGE 1: Install PyTorch first (compatible version)
 RUN pip install --no-cache-dir torch==1.8.1
