@@ -9,7 +9,7 @@ import {
 } from "@blueprintjs/core";
 import { ReactComponent as LogoSvg } from "../logo.svg";
 
-const NavBar = ({ settings, about, help }) => {
+const NavBar = ({ settings, about, help, whitelist, templates }) => {
   return (
     <div>
       <nav className={`${Classes.NAVBAR} ${Classes.DARK}`}>
@@ -24,6 +24,8 @@ const NavBar = ({ settings, about, help }) => {
           </a>
         </NavbarGroup>
         <NavbarGroup align={Alignment.RIGHT}>
+          {whitelist}
+          {templates}
           {settings}
           {about}
           {help}
@@ -37,6 +39,8 @@ NavBar.propTypes = {
   settings: PropTypes.element.isRequired,
   about: PropTypes.element.isRequired,
   help: PropTypes.element.isRequired,
+  whitelist: PropTypes.element,
+  templates: PropTypes.element,
 };
 
 export default NavBar;
