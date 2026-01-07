@@ -64,6 +64,41 @@ Based on the manual corrections and extensions, we can assess the mechanism for 
 
 <img src="docs/scores.png" alt="Show scores and metrics for the automatic detection of personal data" width="80%">
 
+## New Features
+
+### Whitelist Management
+
+OpenRedact now includes a whitelist feature that allows you to exclude specific terms from anonymization. This is particularly useful for:
+- Common medical terms that should not be redacted
+- Institution names that are safe to keep
+- Technical terms specific to your use case
+
+Access the whitelist manager through the filter icon in the navigation bar. You can:
+- Add new entries to the whitelist
+- Remove existing entries
+- View all whitelisted terms
+
+Whitelisted terms are persisted across sessions and are automatically excluded during the PII detection process.
+
+### Template System
+
+The template system allows you to save, load, and share anonymization configurations. This is especially useful for:
+- Medical discharge letters (Entlassbriefe) with standardized anonymization requirements
+- Different privacy levels (standard, high privacy, research)
+- Reusing configurations across multiple documents
+
+Access the template manager through the document icon in the navigation bar. You can:
+- **Save Current Configuration**: Save your current anonymization settings as a reusable template
+- **Load Medical Templates**: Quick access to predefined templates optimized for medical documents:
+  - **Medical Standard**: Pseudonymization for persons, suppression for locations/organizations
+  - **High Privacy**: Maximum privacy with all PIIs suppressed
+  - **Research**: Optimized for research with pseudonymization and generalization
+- **Import/Export**: Share templates with colleagues or backup your configurations
+- **Edit Templates**: Modify template names and descriptions
+- **Delete Templates**: Remove templates you no longer need
+
+All templates are persisted in a Docker volume and remain available across container restarts.
+
 ## Deployment
 
 The app is best deployed using Docker.

@@ -11,6 +11,9 @@ import ErrorBoundary from "./ErrorBoundary";
 import Settings from "./Settings";
 import About from "./About";
 import Help from "./Help";
+import WhitelistManager from "./whitelist/WhitelistManager";
+import TemplateManager from "./templates/TemplateManager";
+import { Button } from "@blueprintjs/core";
 
 const App = () => {
   const t = useContext(PolyglotContext);
@@ -31,6 +34,8 @@ const App = () => {
       mechanismsByTag: {},
     }
   );
+  const [showWhitelist, setShowWhitelist] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   useEffect(() => {
     fetchRecognizers()
@@ -72,6 +77,22 @@ const App = () => {
         }
         about={<About />}
         help={<Help />}
+        whitelist={
+          <Button
+            icon="filter-list"
+            title={t("nav.whitelist") || "Whitelist"}
+            minimal
+            onClick={() => setShowWhitelist(true)}
+          />
+        }
+        templates={
+          <Button
+            icon="document"
+            title={t("nav.templates") || "Templates"}
+            minimal
+            onClick={() => setShowTemplates(true)}
+          />
+        }
       />
       <div className="grid-container">
         <ErrorBoundary>
@@ -89,6 +110,16 @@ const App = () => {
           />
         </ErrorBoundary>
       </div>
+      <WhitelistManager
+        isOpen={showWhitelist}
+        onClose={() => setShowWhitelist(false)}
+      />
+      <TemplateManager
+        isOpen={showTemplates}
+        onClose={() => setShowTemplates(false)}
+        currentConfig={anonymizationConfig}
+        onApplyTemplate={setAnonymizationConfig}
+      />
     </div>
   );
 };

@@ -1,7 +1,8 @@
-from dataclasses import asdict
-from typing import List
 import base64
 from pathlib import Path
+from datetime import datetime
+from dataclasses import asdict
+from typing import List
 
 from fastapi import APIRouter, File, UploadFile, Form, HTTPException
 from starlette.responses import StreamingResponse, JSONResponse
@@ -21,7 +22,16 @@ from app.schemas import (
     ErrorMessage,
     AnonymizedPiisResponse,
     AnonymizedPii,
+    WhitelistResponse,
+    WhitelistEntry,
+    WhitelistBulkUpdate,
+    TemplateData,
+    TemplateResponse,
+    TemplatesResponse,
+    TemplateImport,
+    SuccessResponse,
 )
+from app.storage import WhitelistStorage, TemplateStorage
 
 logger = logging.getLogger(__name__)
 
@@ -133,8 +143,17 @@ async def find_piis(recognizers: str = Form(...), file: UploadFile = File(...)):
     nerwhal_config = nerwhal.Config(language="de", recognizer_paths=recognizer_paths, use_statistical_ner=use_statistical_ner)
     res = nerwhal.recognize(wrapper.text, config=nerwhal_config, combination_strategy="smart-fusion")
 
+    # Filter out whitelisted entities (case-insensitive)
+    whitelist = WhitelistStorage.get_all()
+    if whitelist:
+        whitelist_lower = set(entry.lower() for entry in whitelist)
+        filtered_piis = [pii for pii in res["ents"] if pii.text.lower().strip() not in whitelist_lower]
+        logger.info(f"Filtered {len(res['ents']) - len(filtered_piis)} whitelisted PII(s)")
+    else:
+        filtered_piis = res["ents"]
+
     return FindPiisResponse(
-        piis=[asdict(pii) for pii in res["ents"]],
+        piis=[asdict(pii) for pii in filtered_piis],
         tokens=[asdict(token) for token in res["tokens"]],
         format=str(wrapper.file.__class__.__name__).lower().replace("format", ""),
     )
@@ -176,3 +195,155 @@ async def tags():
 )
 async def supported_recognizers():
     return list(recognizer_name_to_path_lookup.keys()) + ["statistical_recognizer"]
+
+
+# Whitelist endpoints
+@router.get(
+    "/whitelist",
+    summary="Get Whitelist",
+    description="Fetch all whitelist entries. Whitelisted terms are excluded from anonymization.",
+    response_model=WhitelistResponse,
+)
+async def get_whitelist():
+    """Get all whitelist entries"""
+    entries = WhitelistStorage.get_all()
+    return WhitelistResponse(entries=entries)
+
+
+@router.post(
+    "/whitelist",
+    summary="Add Whitelist Entry",
+    description="Add a new entry to the whitelist.",
+    response_model=SuccessResponse,
+    responses={400: {"model": ErrorMessage}},
+)
+async def add_whitelist_entry(data: WhitelistEntry):
+    """Add entry to whitelist"""
+    if not data.entry or not data.entry.strip():
+        raise HTTPException(status_code=400, detail="Entry cannot be empty")
+
+    success = WhitelistStorage.add(data.entry.strip())
+    if success:
+        return SuccessResponse(success=True, message="Entry added successfully")
+    raise HTTPException(status_code=500, detail="Failed to add entry")
+
+
+@router.delete(
+    "/whitelist",
+    summary="Remove Whitelist Entry",
+    description="Remove an entry from the whitelist.",
+    response_model=SuccessResponse,
+)
+async def remove_whitelist_entry(data: WhitelistEntry):
+    """Remove entry from whitelist"""
+    success = WhitelistStorage.remove(data.entry)
+    if success:
+        return SuccessResponse(success=True, message="Entry removed successfully")
+    raise HTTPException(status_code=500, detail="Failed to remove entry")
+
+
+@router.put(
+    "/whitelist",
+    summary="Update Whitelist",
+    description="Replace the entire whitelist with new entries.",
+    response_model=SuccessResponse,
+)
+async def update_whitelist(data: WhitelistBulkUpdate):
+    """Update entire whitelist"""
+    success = WhitelistStorage.set_all(data.entries)
+    if success:
+        return SuccessResponse(success=True, message="Whitelist updated successfully")
+    raise HTTPException(status_code=500, detail="Failed to update whitelist")
+
+
+# Template endpoints
+@router.get(
+    "/templates",
+    summary="Get All Templates",
+    description="Fetch all anonymization templates.",
+    response_model=TemplatesResponse,
+)
+async def get_templates():
+    """Get all templates"""
+    templates = TemplateStorage.get_all()
+    return TemplatesResponse(templates=templates)
+
+
+@router.get(
+    "/templates/{template_id}",
+    summary="Get Template",
+    description="Fetch a specific anonymization template by ID.",
+    response_model=TemplateResponse,
+    responses={404: {"model": ErrorMessage}},
+)
+async def get_template(template_id: str):
+    """Get specific template"""
+    template = TemplateStorage.get(template_id)
+    if template is None:
+        raise HTTPException(status_code=404, detail="Template not found")
+    return TemplateResponse(template_id=template_id, template=template)
+
+
+@router.post(
+    "/templates/{template_id}",
+    summary="Save Template",
+    description="Create or update an anonymization template.",
+    response_model=SuccessResponse,
+    responses={400: {"model": ErrorMessage}},
+)
+async def save_template(template_id: str, template: TemplateData):
+    """Save or update template"""
+    if not template_id or not template_id.strip():
+        raise HTTPException(status_code=400, detail="Template ID cannot be empty")
+
+    # Add timestamps
+    now = datetime.utcnow().isoformat()
+    template_dict = template.dict()
+    if not template_dict.get("created_at"):
+        template_dict["created_at"] = now
+    template_dict["updated_at"] = now
+
+    success = TemplateStorage.save(template_id, template_dict)
+    if success:
+        return SuccessResponse(success=True, message="Template saved successfully")
+    raise HTTPException(status_code=500, detail="Failed to save template")
+
+
+@router.delete(
+    "/templates/{template_id}",
+    summary="Delete Template",
+    description="Delete an anonymization template.",
+    response_model=SuccessResponse,
+)
+async def delete_template(template_id: str):
+    """Delete template"""
+    success = TemplateStorage.delete(template_id)
+    if success:
+        return SuccessResponse(success=True, message="Template deleted successfully")
+    raise HTTPException(status_code=500, detail="Failed to delete template")
+
+
+@router.post(
+    "/templates/import",
+    summary="Import Templates",
+    description="Import templates from a JSON file. Existing templates with same IDs will be overwritten.",
+    response_model=SuccessResponse,
+)
+async def import_templates(data: TemplateImport):
+    """Import templates"""
+    success = TemplateStorage.import_templates(data.templates)
+    if success:
+        return SuccessResponse(success=True, message=f"Imported {len(data.templates)} template(s)")
+    raise HTTPException(status_code=500, detail="Failed to import templates")
+
+
+@router.get(
+    "/templates/export/all",
+    summary="Export All Templates",
+    description="Export all templates as JSON for backup or sharing.",
+    response_model=TemplatesResponse,
+)
+async def export_templates():
+    """Export all templates"""
+    templates = TemplateStorage.get_all()
+    return TemplatesResponse(templates=templates)

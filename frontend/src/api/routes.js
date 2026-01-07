@@ -65,6 +65,48 @@ function fetchRecognizers() {
   return API.get("recognizers");
 }
 
+// Whitelist API calls
+function getWhitelist() {
+  return API.get("whitelist");
+}
+
+function addWhitelistEntry(entry) {
+  return API.post("whitelist", { entry });
+}
+
+function removeWhitelistEntry(entry) {
+  return API.delete("whitelist", { data: { entry } });
+}
+
+function updateWhitelist(entries) {
+  return API.put("whitelist", { entries });
+}
+
+// Template API calls
+function getTemplates() {
+  return API.get("templates");
+}
+
+function getTemplate(templateId) {
+  return API.get(`templates/${templateId}`);
+}
+
+function saveTemplate(templateId, templateData) {
+  return API.post(`templates/${templateId}`, templateData);
+}
+
+function deleteTemplate(templateId) {
+  return API.delete(`templates/${templateId}`);
+}
+
+function importTemplates(templates) {
+  return API.post("templates/import", { templates });
+}
+
+function exportTemplates() {
+  return API.get("templates/export/all");
+}
+
 export {
   findPiis,
   computeScores,
@@ -73,4 +115,14 @@ export {
   anonymizePiis,
   compileFile,
   fetchRecognizers,
+  getWhitelist,
+  addWhitelistEntry,
+  removeWhitelistEntry,
+  updateWhitelist,
+  getTemplates,
+  getTemplate,
+  saveTemplate,
+  deleteTemplate,
+  importTemplates,
+  exportTemplates,
 };
