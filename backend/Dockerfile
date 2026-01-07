@@ -18,14 +18,10 @@ ENV PIP_NO_CACHE_DIR=1
 COPY requirements-dev.txt .
 RUN pip install --no-cache-dir -r requirements-dev.txt
 
-# WORKAROUND: Install compatible PyTorch before requirements.txt
-# This bypasses nerwhal's outdated torch<1.6.0 constraint (versions removed from PyPI)
-# PyTorch 1.8.1 is fully backward-compatible and officially supported by Stanza
-RUN pip install --no-cache-dir torch==1.8.1
-
-# Install packages (pip skips torch since already installed)
+# Install packages with constraint override for torch
+COPY constraints.txt .
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -c constraints.txt -r requirements.txt
 
 # Install optional packages
 RUN pip install chardet
