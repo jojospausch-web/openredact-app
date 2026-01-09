@@ -63,7 +63,7 @@ def test_pydantic_version():
     """Test that Pydantic v1 is installed (not v2)"""
     try:
         import pydantic
-        version = pydantic.VERSION
+        version = pydantic.__version__
         major_version = int(version.split('.')[0])
         
         if major_version == 1:
