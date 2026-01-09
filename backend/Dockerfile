@@ -18,7 +18,7 @@ ENV PIP_NO_CACHE_DIR=1
 COPY requirements-dev.txt .
 RUN pip install --no-cache-dir -r requirements-dev.txt
 
-# Five-stage installation to work around nerwhal's outdated torch requirement and pydantic v2 incompatibility
+# Four-stage installation to work around nerwhal's outdated torch requirement and pydantic v2 incompatibility
 
 # STAGE 1: Install PyTorch first (compatible version)
 RUN pip install --no-cache-dir torch==1.8.1
@@ -38,15 +38,11 @@ RUN pip install --no-cache-dir --no-deps \
     git+https://github.com/openredact/nerwhal.git#egg=nerwhal \
     git+https://github.com/openredact/anonymizer.git#egg=or-anonymizer
 
-# STAGE 4: Install openredact dependencies explicitly
+# STAGE 4: Install openredact dependencies (Pydantic v1 compatible versions)
 RUN pip install --no-cache-dir \
-    spacy \
-    stanza \
+    "spacy>=3.0,<3.5" \
+    "stanza>=1.2" \
     flashtext
-
-# STAGE 5: Force Pydantic v1 (spacy/stanza upgraded it to v2)
-# This must come AFTER Stage 4 because spacy/stanza dependencies allow pydantic v2
-RUN pip install --no-cache-dir --force-reinstall --no-deps "pydantic>=1.8,<2.0"
 
 # Install optional packages
 RUN pip install chardet
