@@ -1,6 +1,7 @@
 # NOTE: These dependencies are installed manually in Dockerfile
 # due to torch version conflict from nerwhal (requires torch<1.6.0, unavailable on PyPI)
-# See Dockerfile for the four-stage installation process
+# and pydantic v2 incompatibility with FastAPI 0.65.2
+# See Dockerfile for the five-stage installation process
 
 # Standard packages (installed in Dockerfile Stage 2)
 fastapi==0.65.2
