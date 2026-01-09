@@ -47,8 +47,10 @@ RUN pip install --no-cache-dir \
     "stanza>=1.2,<1.5" \
     flashtext
 
-# Install optional packages
-RUN pip install chardet
+# Install optional packages and expose-text dependencies
+RUN pip install --no-cache-dir \
+    chardet \
+    beautifulsoup4
 
 # Environment
 ENV STANZA_TEST_HOME=/app/stanza_test
