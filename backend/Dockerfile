@@ -24,7 +24,9 @@ RUN pip install --no-cache-dir -r requirements-dev.txt
 RUN pip install --no-cache-dir torch==1.8.1
 
 # STAGE 2: Install standard packages with full dependency checking
+# Pin pydantic <2.0 for FastAPI 0.65.2 compatibility
 RUN pip install --no-cache-dir \
+    "pydantic>=1.8,<2.0" \
     fastapi==0.65.2 \
     uvicorn==0.11.7 \
     python-multipart==0.0.5 \
