@@ -18,7 +18,7 @@ ENV PIP_NO_CACHE_DIR=1
 COPY requirements-dev.txt .
 RUN pip install --no-cache-dir -r requirements-dev.txt
 
-# Four-stage installation to work around nerwhal's outdated torch requirement
+# Five-stage installation to work around nerwhal's outdated torch requirement and pydantic v2 incompatibility
 
 # STAGE 1: Install PyTorch first (compatible version)
 RUN pip install --no-cache-dir torch==1.8.1
@@ -43,6 +43,10 @@ RUN pip install --no-cache-dir \
     spacy \
     stanza \
     flashtext
+
+# STAGE 5: Force Pydantic v1 (spacy/stanza upgraded it to v2)
+# This must come AFTER Stage 4 because spacy/stanza dependencies allow pydantic v2
+RUN pip install --no-cache-dir --force-reinstall --no-deps "pydantic>=1.8,<2.0"
 
 # Install optional packages
 RUN pip install chardet
