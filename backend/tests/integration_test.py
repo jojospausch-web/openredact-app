@@ -59,6 +59,35 @@ def test_storage_module():
         traceback.print_exc()
         return False
 
+def test_pydantic_version():
+    """Test that Pydantic v1 is installed (not v2)"""
+    try:
+        import pydantic
+        version = pydantic.VERSION
+        major_version = int(version.split('.')[0])
+        
+        if major_version == 1:
+            print(f"✓ Pydantic v1 is installed (version: {version})")
+        else:
+            print(f"✗ Pydantic v{major_version} is installed (expected v1), version: {version}")
+            return False
+            
+        # Test the specific import that fails in Pydantic v2
+        try:
+            from pydantic.fields import Undefined
+            print("✓ Can import 'Undefined' from pydantic.fields (v1 compatibility)")
+            return True
+        except ImportError as e:
+            print(f"✗ Cannot import 'Undefined' from pydantic.fields: {e}")
+            print("  This indicates Pydantic v2 is installed, which breaks FastAPI 0.65.2")
+            return False
+            
+    except Exception as e:
+        print(f"✗ Pydantic version check failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
 def test_schemas():
     """Test that schemas can be imported"""
     try:
@@ -105,6 +134,7 @@ if __name__ == "__main__":
     print("Running backend integration tests...\n")
     
     results = []
+    results.append(test_pydantic_version())
     results.append(test_schemas())
     results.append(test_storage_module())
     results.append(test_endpoints_module())
