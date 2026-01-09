@@ -18,10 +18,29 @@ ENV PIP_NO_CACHE_DIR=1
 COPY requirements-dev.txt .
 RUN pip install --no-cache-dir -r requirements-dev.txt
 
-# Install packages with constraint override for torch
-COPY constraints.txt .
-COPY requirements.txt .
-RUN pip install --no-cache-dir -c constraints.txt -r requirements.txt
+# Four-stage installation to work around nerwhal's outdated torch requirement
+
+# STAGE 1: Install PyTorch first (compatible version)
+RUN pip install --no-cache-dir torch==1.8.1
+
+# STAGE 2: Install standard packages with full dependency checking
+RUN pip install --no-cache-dir \
+    fastapi==0.65.2 \
+    uvicorn==0.11.7 \
+    python-multipart==0.0.5 \
+    click==7.1.1
+
+# STAGE 3: Install openredact packages WITHOUT dependency checking
+RUN pip install --no-cache-dir --no-deps \
+    git+https://github.com/openredact/expose-text.git#egg=expose-text \
+    git+https://github.com/openredact/nerwhal.git#egg=nerwhal \
+    git+https://github.com/openredact/anonymizer.git#egg=or-anonymizer
+
+# STAGE 4: Install openredact dependencies explicitly
+RUN pip install --no-cache-dir \
+    spacy \
+    stanza \
+    flashtext
 
 # Install optional packages
 RUN pip install chardet
